@@ -55,7 +55,6 @@ define root view entity ZI_Product
 ];
 
 const CodeEditor = () => {
-  const [code, setCode] = useState<string>('');
   const [analysis, setAnalysis] = useState<ABAPAnalysis | null>(null);
   const [showSnippets, setShowSnippets] = useState(false);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -110,7 +109,7 @@ ENDCLASS.`;
     }
   };
 
-  const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
+  const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor, _monaco: Monaco) => {
     editorRef.current = editor;
   };
 
