@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
+import { useState, useRef } from 'react';
+import Editor, { Monaco } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
 import { analyzeABAPCode } from '../utils/abapAnalyzer';
 import { ABAPAnalysis, ABAPSnippet, KeyboardShortcut } from '../types/abap';
 import { useTheme } from '../context/ThemeContext';
@@ -53,9 +54,11 @@ define root view entity ZI_Product
   }
 ];
 
-export default function CodeEditor() {
+const CodeEditor = () => {
+  const [code, setCode] = useState<string>('');
   const [analysis, setAnalysis] = useState<ABAPAnalysis | null>(null);
   const [showSnippets, setShowSnippets] = useState(false);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const { theme } = useTheme();
   
   const defaultCode = `CLASS zcl_s4h_product_manager DEFINITION
@@ -96,7 +99,7 @@ ENDCLASS.`;
     {
       key: 'Ctrl+S',
       description: 'Analyze code',
-      action: () => handleEditorChange(editor?.getValue())
+      action: () => handleEditorChange(editorRef.current?.getValue())
     }
   ];
 
@@ -105,6 +108,10 @@ ENDCLASS.`;
       const result = analyzeABAPCode(value);
       setAnalysis(result);
     }
+  };
+
+  const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor, monaco: Monaco) => {
+    editorRef.current = editor;
   };
 
   const getSeverityIcon = (severity: string) => {
@@ -195,6 +202,7 @@ ENDCLASS.`;
               onChange={handleEditorChange}
               theme={theme === 'dark' ? 'customDark' : 'customLight'}
               beforeMount={beforeMount}
+              onMount={handleEditorDidMount}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
@@ -236,12 +244,10 @@ ENDCLASS.`;
                         : 'hover:bg-gray-50'
                     }`}
                     onClick={() => {
-                      const editor = monaco.editor.getModels()[0];
-                      if (editor) {
-                        const position = editor.getPosition();
-                        editor.pushEditOperations(
-                          [],
-                          [{
+                      if (editorRef.current) {
+                        const position = editorRef.current.getPosition();
+                        if (position) {
+                          editorRef.current.executeEdits('', [{
                             range: new monaco.Range(
                               position.lineNumber,
                               position.column,
@@ -249,8 +255,8 @@ ENDCLASS.`;
                               position.column
                             ),
                             text: snippet.code
-                          }]
-                        );
+                          }]);
+                        }
                       }
                     }}
                   >
@@ -349,4 +355,6 @@ ENDCLASS.`;
       </div>
     </div>
   );
-}
+};
+
+export default CodeEditor;

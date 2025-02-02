@@ -1,4 +1,3 @@
-import React from 'react';
 import CodeEditor from './components/CodeEditor';
 import NewsTicker from './components/NewsTicker';
 import { useTheme } from './context/ThemeContext';
